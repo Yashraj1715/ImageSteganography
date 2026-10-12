@@ -8,30 +8,22 @@ import java.util.Base64;
 
 public class AESUtil {
 
-    // AES-GCM standard settings
+    
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int GCM_TAG_LENGTH_BITS = 128; // authentication tag size
     private static final int GCM_IV_LENGTH_BYTES = 12;  // recommended IV size for GCM
 
-    /**
-     * Converts a user's password (any length) into a fixed 256-bit AES key
-     * using SHA-256 hashing. Same password always produces the same key.
-     */
     private static SecretKey deriveKeyFromPassword(String password) throws Exception {
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] keyBytes = sha256.digest(password.getBytes("UTF-8")); // always 32 bytes
         return new SecretKeySpec(keyBytes, "AES");
     }
 
-    /**
-     * Encrypts plain text using AES-GCM with a password-derived key.
-     * Returns a Base64 string containing [IV + ciphertext] combined,
-     * so the IV travels along with the encrypted data (needed for decryption).
-     */
+  
     public static String encrypt(String plainText, String password) throws Exception {
         SecretKey key = deriveKeyFromPassword(password);
 
-        // Generate a random IV (Initialization Vector) - must be unique per encryption
+       
         byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
         new SecureRandom().nextBytes(iv);
 
@@ -41,7 +33,7 @@ public class AESUtil {
 
         byte[] cipherTextBytes = cipher.doFinal(plainText.getBytes("UTF-8"));
 
-        // Combine IV + ciphertext into one array so we can decrypt later
+
         byte[] combined = new byte[iv.length + cipherTextBytes.length];
         System.arraycopy(iv, 0, combined, 0, iv.length);
         System.arraycopy(cipherTextBytes, 0, combined, iv.length, cipherTextBytes.length);
@@ -49,14 +41,11 @@ public class AESUtil {
         return Base64.getEncoder().encodeToString(combined);
     }
 
-    /**
-     * Decrypts a Base64 string (produced by encrypt()) back to plain text.
-     * Extracts the IV from the start of the combined data, then decrypts the rest.
-     */
+  
     public static String decrypt(String encryptedBase64, String password) throws Exception {
         byte[] combined = Base64.getDecoder().decode(encryptedBase64);
 
-        // Extract IV (first 12 bytes) and actual ciphertext (rest)
+      
         byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
         byte[] cipherTextBytes = new byte[combined.length - GCM_IV_LENGTH_BYTES];
         System.arraycopy(combined, 0, iv, 0, iv.length);
@@ -84,7 +73,7 @@ public class AESUtil {
 
         System.out.println("Match: " + secret.equals(decrypted));
 
-        // Test wrong password should fail
+
         try {
             decrypt(encrypted, "wrongPassword");
             System.out.println("FAIL: should have thrown exception for wrong password");
